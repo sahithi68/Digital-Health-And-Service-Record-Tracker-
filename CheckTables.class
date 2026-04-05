@@ -1,0 +1,22 @@
+import backend.dao.DBConnection;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
+public class CheckP122 {
+    public static void main(String[] args) {
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn != null) {
+                try (PreparedStatement pt = conn.prepareStatement("SELECT table_name FROM user_tables WHERE table_name LIKE 'PATIENT%'")) {
+                    ResultSet rs = pt.executeQuery();
+                    System.out.println("Matching tables:");
+                    while (rs.next()) {
+                        System.out.println(" - " + rs.getString(1));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

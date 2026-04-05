@@ -1,0 +1,92 @@
+package frontend.doctor;
+
+import frontend.common.UITheme;
+import javax.swing.*;
+import java.awt.*;
+
+public class DoctorLoginUI extends JFrame {
+
+    public DoctorLoginUI() {
+        setTitle("Doctor Login");
+        setSize(500, 600);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        JPanel bgPanel = UITheme.createGradientPanel();
+        bgPanel.setLayout(new GridBagLayout());
+
+        JPanel mainContent = new JPanel();
+        mainContent.setLayout(new BoxLayout(mainContent, BoxLayout.Y_AXIS));
+        mainContent.setOpaque(false);
+
+        // TOP TITLE
+        JLabel lblTitle = new JLabel("DOCTOR LOGIN", SwingConstants.CENTER);
+        lblTitle.setFont(UITheme.TITLE_FONT);
+        lblTitle.setForeground(UITheme.TEXT_LIGHT);
+        lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainContent.add(lblTitle);
+        mainContent.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        // DARK CENTRAL PANEL
+        JPanel loginPanel = new JPanel();
+        loginPanel.setLayout(new BoxLayout(loginPanel, BoxLayout.Y_AXIS));
+        loginPanel.setBackground(UITheme.DARK_PANEL);
+        loginPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
+        loginPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        JTextField txtId = new JTextField();
+        JPanel pnlId = UITheme.createStyledTextField(txtId);
+        pnlId.setMaximumSize(new Dimension(300, 45));
+        loginPanel.add(pnlId);
+        loginPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        JPasswordField txtPassword = new JPasswordField();
+        JPanel pnlPassword = UITheme.createStyledTextField(txtPassword);
+        pnlPassword.setMaximumSize(new Dimension(300, 45));
+        loginPanel.add(pnlPassword);
+        loginPanel.add(Box.createRigidArea(new Dimension(0, 40)));
+
+        JButton btnLogin = UITheme.createPrimaryButton("LOGIN");
+        btnLogin.setMaximumSize(new Dimension(300, 45));
+        btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
+        loginPanel.add(btnLogin);
+
+        mainContent.add(loginPanel);
+        mainContent.add(Box.createRigidArea(new Dimension(0, 15)));
+
+        // REGISTER SEC BUTTON BELOW PANEL
+        JButton btnRegister = UITheme.createSecondaryButton("REGISTER");
+        btnRegister.setMaximumSize(new Dimension(300, 45));
+        btnRegister.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainContent.add(btnRegister);
+
+        bgPanel.add(mainContent);
+        add(bgPanel);
+
+        // Actions
+        btnRegister.addActionListener(e -> {
+            new DoctorRegistrationUI().setVisible(true);
+        });
+
+        btnLogin.addActionListener(e -> {
+            String docId = txtId.getText();
+            String password = new String(txtPassword.getPassword());
+            if (docId.isEmpty() || password.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please enter your Doctor ID and Password");
+                return;
+            }
+            
+            if (backend.dao.DoctorDAO.authenticateDoctor(docId, password)) {
+                JOptionPane.showMessageDialog(this, "Login Successful");
+                dispose();
+                new DoctorDashboardUI(docId).showDashboard();
+            } else {
+                JOptionPane.showMessageDialog(this, "Invalid Doctor ID or Password", "Login Failed", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+    }
+
+    public void login() {
+        this.setVisible(true);
+    }
+}

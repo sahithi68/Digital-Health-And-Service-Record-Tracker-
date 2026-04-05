@@ -1,0 +1,22 @@
+import backend.dao.DBConnection;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
+
+public class CheckTables {
+    public static void main(String[] args) {
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn != null) {
+                try (Statement stmt = conn.createStatement();
+                     ResultSet rs = stmt.executeQuery("SELECT table_name FROM user_tables")) {
+                    System.out.println("Existing Tables:");
+                    while (rs.next()) {
+                        System.out.println("- " + rs.getString("table_name"));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

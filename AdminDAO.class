@@ -1,0 +1,25 @@
+import backend.dao.DBConnection;
+import java.sql.Connection;
+import java.sql.Statement;
+
+public class AddDoctorPassword {
+    public static void main(String[] args) {
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn != null) {
+                try (Statement stmt = conn.createStatement()) {
+                    System.out.println("Adding password column to doctors table...");
+                    // Using VARCHAR2(255) for password. Oracle syntax.
+                    stmt.execute("ALTER TABLE doctors ADD password VARCHAR2(255)");
+                    System.out.println("Column added successfully!");
+                } catch (java.sql.SQLSyntaxErrorException e) {
+                    // Usually means column already exists
+                    System.out.println("Error (perhaps column already exists): " + e.getMessage());
+                }
+            } else {
+                System.out.println("Failed to connect to database in script.");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

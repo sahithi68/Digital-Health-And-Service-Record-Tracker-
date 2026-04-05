@@ -1,0 +1,122 @@
+package backend.dao;
+
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
+
+public class AdminDAO {
+
+    private static String[][] getTableData(String query, int columnCount) {
+        List<String[]> dataList = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) return new String[0][0];
+            try (PreparedStatement pt = conn.prepareStatement(query);
+                 ResultSet rs = pt.executeQuery()) {
+                while (rs.next()) {
+                    String[] row = new String[columnCount];
+                    for (int i = 0; i < columnCount; i++) {
+                        row[i] = rs.getString(i + 1);
+                    }
+                    dataList.add(row);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return dataList.toArray(new String[0][]);
+    }
+
+    public static String[][] getAllDoctors() {
+        String query = "SELECT doctor_id, name, specialization, gender FROM doctors ORDER BY doctor_id ASC";
+        return getTableData(query, 4);
+    }
+
+    public static String[][] getAllPatients() {
+        String query = "SELECT patient_id, name, age, blood_group, phone FROM patients ORDER BY patient_id ASC";
+        return getTableData(query, 5);
+    }
+
+    public static String[][] getAllAppointments() {
+        String query = "SELECT patient_id, doctor_id, TO_CHAR(appointment_date, 'YYYY-MM-DD'), status FROM appointments ORDER BY appointment_date DESC";
+        return getTableData(query, 4);
+    }
+
+    public static boolean addServiceRecord(String patientId, String serviceName, double amount, String status) {
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) return false;
+            String query = "INSERT INTO service_records (service_id, patient_id, service_name, service_date, amount, status) VALUES ('S' || TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS'), ?, ?, SYSDATE, ?, ?)";
+            try (PreparedStatement pt = conn.prepareStatement(query)) {
+                pt.setString(1, patientId);
+                pt.setString(2, serviceName);
+                pt.setDouble(3, amount);
+                pt.setString(4, status);
+                return pt.executeUpdate() > 0;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean removePatient(String patientId) {
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) return false;
+            conn.setAutoCommit(false);
+            
+            String[] queries = {
+                "DELETE FROM appointment_history WHERE patient_id = ?",
+                "DELETE FROM appointments WHERE patient_id = ?",
+                "DELETE FROM health_records WHERE patient_id = ?",
+                "DELETE FROM service_records WHERE patient_id = ?",
+                "DELETE FROM reports WHERE patient_id = ?",
+                "DELETE FROM patients WHERE patient_id = ?"
+            };
+            
+            boolean deleted = false;
+            for (String query : queries) {
+                try (PreparedStatement pt = conn.prepareStatement(query)) {
+                    pt.setString(1, patientId);
+                    int rows = pt.executeUpdate();
+                    if (query.contains("patients WHERE")) {
+                        deleted = (rows > 0);
+                    }
+                }
+            }
+            conn.commit();
+            return deleted;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public static boolean removeDoctor(String doctorId) {
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) return false;
+            conn.setAutoCommit(false);
+            
+            String[] queries = {
+                "DELETE FROM appointment_history WHERE doctor_id = ?",
+                "DELETE FROM appointments WHERE doctor_id = ?",
+                "DELETE FROM health_records WHERE doctor_id = ?",
+                "DELETE FROM doctors WHERE doctor_id = ?"
+            };
+            
+            boolean deleted = false;
+            for (String query : queries) {
+                try (PreparedStatement pt = conn.prepareStatement(query)) {
+                    pt.setString(1, doctorId);
+                    int rows = pt.executeUpdate();
+                    if (query.contains("doctors WHERE")) {
+                        deleted = (rows > 0);
+                    }
+                }
+            }
+            conn.commit();
+            return deleted;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+}

@@ -1,0 +1,122 @@
+package frontend.common;
+
+import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.JTableHeader;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.io.File;
+
+public class DataViewerUI extends JDialog {
+
+    public DataViewerUI(JFrame parent, String title, String[] columns, String[][] data) {
+        super(parent, title, true);
+        setSize(700, 400);
+        setLocationRelativeTo(parent);
+
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        mainPanel.setBackground(UITheme.DARK_PANEL);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Title Header
+        JLabel lblTitle = new JLabel(title, SwingConstants.CENTER);
+        lblTitle.setFont(UITheme.TITLE_FONT);
+        lblTitle.setForeground(UITheme.TEXT_LIGHT);
+        mainPanel.add(lblTitle, BorderLayout.NORTH);
+
+        // Define Table
+        JTable table = new JTable(data, columns);
+        table.setFillsViewportHeight(true);
+        table.setBackground(UITheme.DARK_PANEL);
+        table.setForeground(UITheme.TEXT_LIGHT);
+        table.setFont(UITheme.MAIN_FONT);
+        table.setRowHeight(30);
+        table.setGridColor(new Color(60, 80, 90));
+        table.setDefaultEditor(Object.class, null); // Disable editing
+
+        // Selection listener for the button
+        JButton btnOpen = UITheme.createPrimaryButton("OPEN DOCUMENT");
+        btnOpen.setEnabled(false);
+
+        if ("Reports & Documents".equals(title)) {
+            table.setToolTipText("Select a row and click 'OPEN DOCUMENT' or double-click to view");
+            
+            table.getSelectionModel().addListSelectionListener(e -> {
+                btnOpen.setEnabled(table.getSelectedRow() != -1);
+            });
+
+            table.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getClickCount() == 2) {
+                        openSelectedFile(table);
+                    }
+                }
+            });
+        }
+
+        // Header Styling
+        JTableHeader header = table.getTableHeader();
+        header.setBackground(UITheme.BG_TOP);
+        header.setForeground(UITheme.TEXT_LIGHT);
+        header.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        header.setPreferredSize(new Dimension(100, 40));
+
+        // Cell Alignment (Center)
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(JLabel.CENTER);
+        for (int i = 0; i < table.getColumnCount(); i++) {
+            table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
+        }
+
+        // Scroll Pane
+        JScrollPane scrollPane = new JScrollPane(table);
+        scrollPane.getViewport().setBackground(UITheme.DARK_PANEL);
+        scrollPane.setBorder(BorderFactory.createLineBorder(new Color(60, 80, 90), 1));
+        
+        mainPanel.add(scrollPane, BorderLayout.CENTER);
+
+        // Buttons Panel
+        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        bottomPanel.setOpaque(false);
+
+        if ("Reports & Documents".equals(title)) {
+            btnOpen.addActionListener(e -> openSelectedFile(table));
+            bottomPanel.add(btnOpen);
+        }
+
+        JButton btnClose = UITheme.createSecondaryButton("CLOSE");
+        btnClose.addActionListener(e -> dispose());
+        bottomPanel.add(btnClose);
+        
+        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
+
+        add(mainPanel);
+    }
+
+    private void openSelectedFile(JTable table) {
+        int row = table.getSelectedRow();
+        if (row != -1 && table.getColumnCount() > 1) {
+            String filePath = (String) table.getValueAt(row, 1);
+            if (filePath != null && !filePath.trim().isEmpty()) {
+                try {
+                    File file = new File(filePath);
+                    if (file.exists()) {
+                        if (Desktop.isDesktopSupported()) {
+                            Desktop.getDesktop().open(file);
+                        } else {
+                            JOptionPane.showMessageDialog(this, "Desktop integration is not supported on this system.", "Error", JOptionPane.ERROR_MESSAGE);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(this, "File not found at: " + filePath, "Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Unable to open file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "No file path available for this record.", "Warning", JOptionPane.WARNING_MESSAGE);
+            }
+        }
+    }
+}

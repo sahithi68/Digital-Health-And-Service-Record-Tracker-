@@ -1,0 +1,139 @@
+package frontend.doctor;
+
+import backend.dao.DoctorDAO;
+import frontend.common.UITheme;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+
+public class DoctorRegistrationUI extends JFrame {
+
+    public DoctorRegistrationUI() {
+        setTitle("Doctor Registration");
+        setSize(500, 700);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        JPanel bgPanel = UITheme.createGradientPanel();
+        bgPanel.setLayout(new GridBagLayout());
+
+        JPanel mainContent = new JPanel();
+        mainContent.setLayout(new BoxLayout(mainContent, BoxLayout.Y_AXIS));
+        mainContent.setOpaque(false);
+
+        // TOP TITLE
+        JLabel lblTitle = new JLabel("DOCTOR REGISTRATION", SwingConstants.CENTER);
+        lblTitle.setFont(UITheme.TITLE_FONT);
+        lblTitle.setForeground(UITheme.TEXT_LIGHT);
+        lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainContent.add(lblTitle);
+        mainContent.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        // DARK CENTRAL PANEL
+        JPanel regPanel = new JPanel();
+        regPanel.setLayout(new BoxLayout(regPanel, BoxLayout.Y_AXIS));
+        regPanel.setBackground(UITheme.DARK_PANEL);
+        regPanel.setBorder(BorderFactory.createEmptyBorder(30, 40, 30, 40));
+        regPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        // Full Name
+        JLabel lblName = new JLabel("Full Name");
+        lblName.setForeground(UITheme.TEXT_LIGHT);
+        regPanel.add(lblName);
+        regPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        JTextField txtName = new JTextField();
+        JPanel pnlName = UITheme.createStyledTextField(txtName);
+        pnlName.setMaximumSize(new Dimension(300, 45));
+        regPanel.add(pnlName);
+        regPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        // Specialization
+        JLabel lblSpec = new JLabel("Specialization");
+        lblSpec.setForeground(UITheme.TEXT_LIGHT);
+        regPanel.add(lblSpec);
+        regPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        String[] specs = {"Cardiology", "Neurology", "Orthopedics", "Pediatrics", "General Medicine"};
+        JComboBox<String> comboSpec = new JComboBox<>(specs);
+        comboSpec.setMaximumSize(new Dimension(300, 45));
+        comboSpec.setFont(UITheme.MAIN_FONT);
+        regPanel.add(comboSpec);
+        regPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        // Gender
+        JLabel lblGender = new JLabel("Gender");
+        lblGender.setForeground(UITheme.TEXT_LIGHT);
+        regPanel.add(lblGender);
+        regPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        
+        JPanel genderPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        genderPanel.setOpaque(false);
+        genderPanel.setMaximumSize(new Dimension(300, 40));
+        
+        JRadioButton rbMale = new JRadioButton("Male", true);
+        JRadioButton rbFemale = new JRadioButton("Female");
+        rbMale.setForeground(UITheme.TEXT_LIGHT);
+        rbFemale.setForeground(UITheme.TEXT_LIGHT);
+        rbMale.setOpaque(false);
+        rbFemale.setOpaque(false);
+        
+        ButtonGroup bg = new ButtonGroup();
+        bg.add(rbMale);
+        bg.add(rbFemale);
+        
+        genderPanel.add(rbMale);
+        genderPanel.add(rbFemale);
+        regPanel.add(genderPanel);
+        regPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        // Password
+        JLabel lblPassword = new JLabel("Password");
+        lblPassword.setForeground(UITheme.TEXT_LIGHT);
+        regPanel.add(lblPassword);
+        regPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        JPasswordField txtPassword = new JPasswordField();
+        JPanel pnlPassword = UITheme.createStyledTextField(txtPassword);
+        pnlPassword.setMaximumSize(new Dimension(300, 45));
+        regPanel.add(pnlPassword);
+        regPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+
+        // Buttons
+        JButton btnRegister = UITheme.createPrimaryButton("REGISTER");
+        btnRegister.setMaximumSize(new Dimension(300, 45));
+        btnRegister.setAlignmentX(Component.CENTER_ALIGNMENT);
+        regPanel.add(btnRegister);
+        
+        regPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        
+        JButton btnCancel = UITheme.createSecondaryButton("CANCEL");
+        btnCancel.setMaximumSize(new Dimension(300, 45));
+        btnCancel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        regPanel.add(btnCancel);
+
+        mainContent.add(regPanel);
+        bgPanel.add(mainContent);
+        add(bgPanel);
+
+        // Actions
+        btnCancel.addActionListener(e -> dispose());
+        btnRegister.addActionListener((ActionEvent e) -> {
+            String name = txtName.getText();
+            String spec = (String) comboSpec.getSelectedItem();
+            String gender = rbMale.isSelected() ? "Male" : "Female";
+            String password = new String(txtPassword.getPassword());
+            
+            if(name.isEmpty() || password.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Name and Password cannot be empty");
+                return;
+            }
+
+            String docId = DoctorDAO.registerDoctor(name, spec, gender, password);
+            if(docId != null) {
+                JOptionPane.showMessageDialog(this, "Registration Successful!\nYour unique Doctor ID is: " + docId);
+                dispose();
+            } else {
+                JOptionPane.showMessageDialog(this, "Database error.");
+            }
+        });
+    }
+}

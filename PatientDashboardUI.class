@@ -1,0 +1,117 @@
+package frontend.doctor;
+
+import frontend.common.UITheme;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+public class DoctorDashboardUI extends JFrame {
+
+    private String docId;
+
+    public DoctorDashboardUI(String docId) {
+        this.docId = docId;
+
+        setTitle("Doctor Dashboard - " + docId);
+        setSize(400, 600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        JPanel bgPanel = UITheme.createGradientPanel();
+        bgPanel.setLayout(new BorderLayout());
+
+        // Header Label
+        JLabel titleLabel = new JLabel("DOCTOR DASHBOARD", SwingConstants.CENTER);
+        titleLabel.setFont(UITheme.TITLE_FONT);
+        titleLabel.setForeground(UITheme.TEXT_LIGHT);
+        titleLabel.setBorder(BorderFactory.createEmptyBorder(40, 0, 20, 0));
+        bgPanel.add(titleLabel, BorderLayout.NORTH);
+
+        // Center Buttons Stack
+        JPanel buttonPanel = new JPanel();
+        buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
+        buttonPanel.setOpaque(false);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(10, 50, 40, 50));
+
+        String[] menuItems = {
+            "Profile", "Health Records",
+            "Appointments", "Patients", "Logout"
+        };
+
+        for (String item : menuItems) {
+            JButton btn = createDashboardButton(item);
+            btn.setMaximumSize(new Dimension(300, 50));
+            // Add spacing
+            buttonPanel.add(btn);
+            buttonPanel.add(Box.createRigidArea(new Dimension(0, 15)));
+            
+            btn.addActionListener(e -> handleMenuClick(item));
+        }
+
+        bgPanel.add(buttonPanel, BorderLayout.CENTER);
+        add(bgPanel);
+    }
+
+    private void handleMenuClick(String item) {
+        switch(item) {
+            case "Profile":
+                String[] profile = backend.dao.DoctorDAO.getDoctorProfile(docId);
+                if (profile != null) {
+                    JOptionPane.showMessageDialog(this,
+                        "Name: " + profile[0] + "\n" +
+                        "Specialization: " + profile[1] + "\n" +
+                        "Gender: " + profile[2],
+                        "Doctor Profile", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Profile not found.");
+                }
+                break;
+            case "Health Records":
+                new AddHealthRecordUI(this, docId).setVisible(true);
+                break;
+            case "Appointments":
+                String[] headersApp = {"Patient ID", "Date", "Status"};
+                String[][] dataApp = backend.dao.DoctorDAO.getDoctorAppointments(docId);
+                new frontend.common.DataViewerUI(this, "My Appointments", headersApp, dataApp).setVisible(true);
+                break;
+            case "Patients":
+                String[] headersPat = {"Patient ID", "Name", "Age", "Blood Group"};
+                String[][] dataPat = backend.dao.DoctorDAO.getMyPatients(docId);
+                new frontend.common.DataViewerUI(this, "My Patients", headersPat, dataPat).setVisible(true);
+                break;
+            case "Logout":
+                dispose();
+                System.out.println("Logging out doctor...");
+                break;
+        }
+    }
+
+    private JButton createDashboardButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        button.setForeground(UITheme.TEXT_LIGHT);
+        button.setBackground(UITheme.DARK_PANEL);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createLineBorder(new Color(60, 80, 90), 1));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(UITheme.PRIMARY_BTN);
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(UITheme.DARK_PANEL);
+            }
+        });
+
+        return button;
+    }
+
+    public void showDashboard() {
+        this.setVisible(true);
+    }
+}

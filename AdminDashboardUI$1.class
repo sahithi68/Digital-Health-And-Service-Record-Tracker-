@@ -1,0 +1,28 @@
+import backend.dao.DBConnection;
+import java.sql.Connection;
+import java.sql.Statement;
+
+public class FixSchema {
+    public static void main(String[] args) {
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn != null) {
+                try (Statement stmt = conn.createStatement()) {
+                    try {
+                        stmt.execute("ALTER TABLE service_records DROP CONSTRAINT FK_PATIENT_SERVICE");
+                        System.out.println("Dropped faulty FK_PATIENT_SERVICE constraint.");
+                    } catch (Exception e) {
+                        System.out.println("Failed to drop constraint: " + e.getMessage());
+                    }
+                    try {
+                        stmt.execute("ALTER TABLE service_records ADD CONSTRAINT fk_service_patient FOREIGN KEY (patient_id) REFERENCES patients(patient_id) ON DELETE CASCADE");
+                        System.out.println("Added correct fk_service_patient constraint.");
+                    } catch (Exception e) {
+                        System.out.println("Failed to add constraint: " + e.getMessage());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

@@ -1,0 +1,158 @@
+package backend.dao;
+
+import java.sql.*;
+
+public class DoctorDAO {
+    public static String registerDoctor(String name, String specialization, String gender, String password) {
+        String generatedId = null;
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) return null;
+
+            // Get next sequence value for the ID
+            String seqQuery = "SELECT doctor_seq.NEXTVAL FROM dual";
+            try (PreparedStatement seqStmt = conn.prepareStatement(seqQuery);
+                 ResultSet rs = seqStmt.executeQuery()) {
+                if (rs.next()) {
+                    int seqValue = rs.getInt(1);
+                    generatedId = "D" + seqValue;
+                }
+            }
+
+            if (generatedId != null) {
+                String insertQuery = "INSERT INTO doctors (doctor_id, name, specialization, gender, password) VALUES (?, ?, ?, ?, ?)";
+                try (PreparedStatement pt = conn.prepareStatement(insertQuery)) {
+                    pt.setString(1, generatedId);
+                    pt.setString(2, name);
+                    pt.setString(3, specialization);
+                    pt.setString(4, gender);
+                    pt.setString(5, password);
+                    int rows = pt.executeUpdate();
+                    if (rows > 0) {
+                        return generatedId;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public static boolean authenticateDoctor(String doctorId, String password) {
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) return false;
+
+            String query = "SELECT password FROM doctors WHERE doctor_id = ?";
+            try (PreparedStatement pt = conn.prepareStatement(query)) {
+                pt.setString(1, doctorId);
+                try (ResultSet rs = pt.executeQuery()) {
+                    if (rs.next()) {
+                        String dbPassword = rs.getString("password");
+                        // If password is not null, compare. If it is null, fallback if needed or return false.
+                        if (dbPassword != null && dbPassword.equals(password)) {
+                            return true;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public static String[] getDoctorProfile(String doctorId) {
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) return null;
+            String query = "SELECT name, specialization, gender FROM doctors WHERE doctor_id = ?";
+            try (PreparedStatement pt = conn.prepareStatement(query)) {
+                pt.setString(1, doctorId);
+                try (ResultSet rs = pt.executeQuery()) {
+                    if (rs.next()) {
+                        return new String[]{
+                            rs.getString("name"),
+                            rs.getString("specialization"),
+                            rs.getString("gender")
+                        };
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    private static String[][] getTableData(String query, String doctorId, int columnCount) {
+        java.util.List<String[]> dataList = new java.util.ArrayList<>();
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) return new String[0][0];
+            try (PreparedStatement pt = conn.prepareStatement(query)) {
+                pt.setString(1, doctorId);
+                try (ResultSet rs = pt.executeQuery()) {
+                    while (rs.next()) {
+                        String[] row = new String[columnCount];
+                        for (int i = 0; i < columnCount; i++) {
+                            row[i] = rs.getString(i + 1);
+                        }
+                        dataList.add(row);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return dataList.toArray(new String[0][]);
+    }
+
+    public static String[][] getDoctorAppointments(String doctorId) {
+        String query = "SELECT patient_id, TO_CHAR(appointment_date, 'YYYY-MM-DD'), status FROM appointments WHERE doctor_id = ? ORDER BY appointment_date DESC";
+        return getTableData(query, doctorId, 3);
+    }
+
+    public static String[][] getMyPatients(String doctorId) {
+        String query = "SELECT DISTINCT p.patient_id, p.name, p.age, p.blood_group FROM patients p JOIN appointments a ON p.patient_id = a.patient_id WHERE a.doctor_id = ?";
+        return getTableData(query, doctorId, 4);
+    }
+
+    public static boolean addHealthRecord(String docId, String patId, String diagnosis, String prescription, String fileName, String filePath) {
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn == null) return false;
+            conn.setAutoCommit(false); 
+            
+            String diagPresc = diagnosis + "\n[Prescription] " + prescription;
+            String hrQuery = "INSERT INTO health_records (patient_id, doctor_id, diagnosis, date_recorded) VALUES (?, ?, ?, SYSDATE)";
+            try (PreparedStatement pt = conn.prepareStatement(hrQuery)) {
+                pt.setString(1, patId);
+                pt.setString(2, docId);
+                pt.setString(3, diagPresc);
+                pt.executeUpdate();
+            }
+
+            if (fileName != null && !fileName.isEmpty() && filePath != null && !filePath.isEmpty()) {
+                String repQuery = "INSERT INTO reports (patient_id, file_name, file_path) VALUES (?, ?, ?)";
+                try (PreparedStatement pt2 = conn.prepareStatement(repQuery)) {
+                    pt2.setString(1, patId);
+                    pt2.setString(2, fileName);
+                    pt2.setString(3, filePath);
+                    pt2.executeUpdate();
+                }
+            }
+
+            String apptQuery = "INSERT INTO appointment_history (record_id, patient_id, doctor_id, app_date, diagnosis, prescription, status) VALUES ((SELECT NVL(MAX(record_id), 0) + 1 FROM appointment_history), ?, ?, SYSDATE, ?, ?, 'Completed')";
+            try (PreparedStatement pt3 = conn.prepareStatement(apptQuery)) {
+                pt3.setString(1, patId);
+                pt3.setString(2, docId);
+                pt3.setString(3, diagnosis);
+                pt3.setString(4, prescription);
+                pt3.executeUpdate();
+            }
+
+            conn.commit();
+            return true;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+}

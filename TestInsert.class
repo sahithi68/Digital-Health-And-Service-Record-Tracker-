@@ -1,0 +1,86 @@
+package frontend.patient;
+
+import frontend.common.UITheme;
+import javax.swing.*;
+import java.awt.*;
+
+public class PatientLoginUI extends JFrame {
+
+    public PatientLoginUI() {
+        setTitle("Patient Login");
+        setSize(500, 600);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        // Entire background gradient
+        JPanel bgPanel = UITheme.createGradientPanel();
+        bgPanel.setLayout(new GridBagLayout()); // Easy centering
+
+        JPanel mainContent = new JPanel();
+        mainContent.setLayout(new BoxLayout(mainContent, BoxLayout.Y_AXIS));
+        mainContent.setOpaque(false);
+
+        // TOP TITLE
+        JLabel lblTitle = new JLabel("PATIENT LOGIN", SwingConstants.CENTER);
+        lblTitle.setFont(UITheme.TITLE_FONT);
+        lblTitle.setForeground(UITheme.TEXT_LIGHT);
+        lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainContent.add(lblTitle);
+        mainContent.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        // DARK CENTRAL PANEL
+        JPanel loginPanel = new JPanel();
+        loginPanel.setLayout(new BoxLayout(loginPanel, BoxLayout.Y_AXIS));
+        loginPanel.setBackground(UITheme.DARK_PANEL);
+        loginPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
+        loginPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        
+        // Single Input: Patient ID (Keeping logic consistent)
+        JTextField txtId = new JTextField();
+        JPanel pnlId = UITheme.createStyledTextField(txtId);
+        pnlId.setMaximumSize(new Dimension(300, 45));
+        loginPanel.add(pnlId);
+        loginPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        // Password Input
+        JPasswordField txtPassword = new JPasswordField();
+        JPanel pnlPassword = UITheme.createStyledTextField(txtPassword);
+        pnlPassword.setMaximumSize(new Dimension(300, 45));
+        loginPanel.add(pnlPassword);
+        loginPanel.add(Box.createRigidArea(new Dimension(0, 40)));
+
+        // Login Button
+        JButton btnLogin = UITheme.createPrimaryButton("LOGIN");
+        btnLogin.setMaximumSize(new Dimension(300, 45));
+        btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
+        loginPanel.add(btnLogin);
+
+        mainContent.add(loginPanel);
+        mainContent.add(Box.createRigidArea(new Dimension(0, 15)));
+
+        bgPanel.add(mainContent);
+        add(bgPanel);
+
+        // Action
+        btnLogin.addActionListener(e -> {
+            String patientId = txtId.getText();
+            String password = new String(txtPassword.getPassword());
+            if (patientId.isEmpty() || password.isEmpty()) {
+                JOptionPane.showMessageDialog(this, "Please enter your Patient ID and Password");
+                return;
+            }
+            
+            if (backend.dao.PatientDAO.authenticatePatient(patientId, password)) {
+                JOptionPane.showMessageDialog(this, "Login Successful");
+                dispose();
+                new PatientDashboardUI(patientId).showDashboard();
+            } else {
+                JOptionPane.showMessageDialog(this, "Invalid Patient ID or Password", "Login Failed", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+    }
+
+    public void login() {
+        this.setVisible(true);
+    }
+}

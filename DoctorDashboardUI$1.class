@@ -1,0 +1,112 @@
+package frontend.common;
+
+import frontend.admin.AdminLoginUI;
+import frontend.doctor.DoctorLoginUI;
+import frontend.doctor.DoctorRegistrationUI;
+import frontend.patient.PatientLoginUI;
+
+import javax.swing.*;
+import javax.swing.border.TitledBorder;
+import java.awt.*;
+
+public class MainMenuUI extends JFrame {
+
+    public MainMenuUI() {
+        setTitle("Digital Health Tracker");
+        setSize(400, 500);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+        
+        // Very light blue background matching image
+        Color bgColor = new Color(240, 246, 252);
+        getContentPane().setBackground(bgColor);
+        setLayout(new BorderLayout());
+
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        mainPanel.setBackground(bgColor);
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Title
+        JLabel titleLabel = new JLabel("Digital Health Tracker", SwingConstants.CENTER);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 26));
+        titleLabel.setForeground(new Color(20, 50, 100)); // Dark navy blue
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        mainPanel.add(titleLabel);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+
+        // Patient Section
+        JPanel patientSection = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 30));
+        patientSection.setBackground(bgColor);
+        TitledBorder patientBorder = BorderFactory.createTitledBorder("Patient Section");
+        patientBorder.setTitleFont(new Font("Segoe UI", Font.BOLD, 12));
+        patientSection.setBorder(patientBorder);
+        patientSection.setMaximumSize(new Dimension(350, 120));
+
+        JButton btnPatientLogin = createBlueButton("Login");
+        JButton btnPatientSignup = createBlueButton("Signup");
+        patientSection.add(btnPatientLogin);
+        patientSection.add(btnPatientSignup);
+
+        mainPanel.add(patientSection);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 20)));
+
+        // Doctor Section
+        JPanel doctorSection = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 30));
+        doctorSection.setBackground(bgColor);
+        TitledBorder doctorBorder = BorderFactory.createTitledBorder("Doctor Section");
+        doctorBorder.setTitleFont(new Font("Segoe UI", Font.BOLD, 12));
+        doctorSection.setBorder(doctorBorder);
+        doctorSection.setMaximumSize(new Dimension(350, 120));
+
+        JButton btnDoctorLogin = createBlueButton("Login");
+        JButton btnDoctorSignup = createBlueButton("Signup");
+        doctorSection.add(btnDoctorLogin);
+        doctorSection.add(btnDoctorSignup);
+
+        mainPanel.add(doctorSection);
+        mainPanel.add(Box.createRigidArea(new Dimension(0, 30)));
+
+        // Admin Button
+        JButton btnAdmin = new JButton("Admin");
+        btnAdmin.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btnAdmin.setForeground(Color.WHITE);
+        btnAdmin.setBackground(new Color(105, 115, 130)); // Slate/Gray color
+        btnAdmin.setFocusPainted(false);
+        btnAdmin.setPreferredSize(new Dimension(150, 40));
+        btnAdmin.setMaximumSize(new Dimension(150, 40));
+        btnAdmin.setAlignmentX(Component.CENTER_ALIGNMENT);
+        btnAdmin.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        
+        mainPanel.add(btnAdmin);
+
+        add(mainPanel, BorderLayout.CENTER);
+
+        // --- Action Listeners ---
+        
+        btnPatientLogin.addActionListener(e -> new PatientLoginUI().login());
+        
+        btnPatientSignup.addActionListener(e -> new frontend.patient.PatientRegistrationUI().setVisible(true));
+
+        btnDoctorLogin.addActionListener(e -> new DoctorLoginUI().login());
+
+        btnDoctorSignup.addActionListener(e -> new DoctorRegistrationUI().setVisible(true));
+
+        btnAdmin.addActionListener(e -> new AdminLoginUI().login());
+    }
+
+    private JButton createBlueButton(String text) {
+        JButton btn = new JButton(text);
+        btn.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(new Color(75, 130, 180)); // Soft Blue
+        btn.setFocusPainted(false);
+        btn.setPreferredSize(new Dimension(100, 40));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return btn;
+    }
+
+    public void showMenu() {
+        this.setVisible(true);
+    }
+}

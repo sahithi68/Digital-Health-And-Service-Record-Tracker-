@@ -1,0 +1,21 @@
+
+package backend.dao;
+
+import java.sql.*;
+
+public class DBConnection {
+    public static Connection getConnection() {
+        try {
+            Class.forName("oracle.jdbc.driver.OracleDriver");
+            return DriverManager.getConnection(
+                    "jdbc:oracle:thin:@localhost:1522/FREE",
+                    "system",
+                    "system");
+        } catch (Exception e) {
+            e.printStackTrace();
+            javax.swing.JOptionPane.showMessageDialog(null, "Connection failed: \n" + e.toString(), "Database Error",
+                    javax.swing.JOptionPane.ERROR_MESSAGE);
+        }
+        return null;
+    }
+}

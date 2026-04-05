@@ -1,0 +1,22 @@
+import backend.dao.DBConnection;
+import java.sql.*;
+
+public class CheckSchema {
+    public static void main(String[] args) {
+        try (Connection conn = DBConnection.getConnection()) {
+            if (conn != null) {
+                DatabaseMetaData metaData = conn.getMetaData();
+                ResultSet rs = metaData.getColumns(null, null, "REPORTS", null);
+                System.out.println("REPORTS Table Columns:");
+                while (rs.next()) {
+                    String name = rs.getString("COLUMN_NAME");
+                    String type = rs.getString("TYPE_NAME");
+                    int size = rs.getInt("COLUMN_SIZE");
+                    System.out.println(" - " + name + " (" + type + ", " + size + ")");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}

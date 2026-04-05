@@ -1,0 +1,96 @@
+package frontend.common;
+
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
+import java.awt.*;
+
+public class UITheme {
+
+    // Color Palette
+    public static final Color BG_TOP = new Color(40, 45, 50);
+    public static final Color BG_BOTTOM = new Color(15, 15, 15);
+    public static final Color DARK_PANEL = new Color(18, 30, 36);
+    public static final Color INPUT_BG = new Color(224, 224, 224);
+    public static final Color INPUT_PREFIX_BG = new Color(204, 204, 204);
+    public static final Color PRIMARY_BTN = new Color(78, 135, 147);
+    public static final Color SECONDARY_BTN = new Color(15, 25, 30);
+    public static final Color TEXT_LIGHT = new Color(240, 240, 240);
+    public static final Color TEXT_DARK = new Color(50, 50, 50);
+
+    // Fonts
+    public static final Font MAIN_FONT = new Font("Segoe UI", Font.PLAIN, 14);
+    public static final Font TITLE_FONT = new Font("Segoe UI Semilight", Font.PLAIN, 24);
+    public static final Font BUTTON_FONT = new Font("Segoe UI", Font.BOLD, 12);
+
+    // Create a Background Panel with Image or Dark Gradient
+    public static JPanel createGradientPanel() {
+        return new JPanel() {
+            private Image bgImage;
+            {
+                java.io.File f = new java.io.File("background.png");
+                if (!f.exists()) f = new java.io.File("background.jpg");
+                if (f.exists()) {
+                    bgImage = new ImageIcon(f.getAbsolutePath()).getImage();
+                }
+            }
+
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (bgImage != null) {
+                    g.drawImage(bgImage, 0, 0, getWidth(), getHeight(), this);
+                } else {
+                    Graphics2D g2d = (Graphics2D) g.create();
+                    int width = getWidth();
+                    int height = getHeight();
+                    GradientPaint gp = new GradientPaint(0, 0, BG_TOP, 0, height, BG_BOTTOM);
+                    g2d.setPaint(gp);
+                    g2d.fillRect(0, 0, width, height);
+                    g2d.dispose();
+                }
+            }
+        };
+    }
+
+    // Configure a standard bold Teal button
+    public static JButton createPrimaryButton(String text) {
+        JButton btn = new JButton(text);
+        btn.setFont(BUTTON_FONT);
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(PRIMARY_BTN);
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return btn;
+    }
+
+    // Configure a dark button (like the REGISTER button)
+    public static JButton createSecondaryButton(String text) {
+        JButton btn = new JButton(text);
+        btn.setFont(BUTTON_FONT);
+        btn.setForeground(Color.WHITE);
+        btn.setBackground(SECONDARY_BTN);
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createEmptyBorder(12, 20, 12, 20));
+        btn.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        return btn;
+    }
+
+    // Configure a customized Text Field matching the image
+    // We'll wrap it in a JPanel with BorderLayout
+    public static JPanel createStyledTextField(JTextField txtField) {
+        JPanel wrapper = new JPanel(new BorderLayout());
+        wrapper.setBackground(INPUT_BG);
+        
+        txtField.setOpaque(false);
+        txtField.setBorder(new EmptyBorder(0, 15, 0, 15));
+        txtField.setFont(MAIN_FONT);
+        txtField.setForeground(TEXT_DARK);
+
+        wrapper.add(txtField, BorderLayout.CENTER);
+        wrapper.setPreferredSize(new Dimension(300, 40));
+
+        return wrapper;
+    }
+
+}

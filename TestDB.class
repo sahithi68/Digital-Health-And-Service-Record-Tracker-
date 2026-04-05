@@ -1,0 +1,161 @@
+package frontend.patient;
+
+import frontend.common.UITheme;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+public class PatientDashboardUI extends JFrame {
+
+    private String patientId;
+
+    public PatientDashboardUI(String patientId) {
+        this.patientId = patientId;
+        
+        setTitle("Patient Dashboard - " + patientId);
+        setSize(800, 600);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        JPanel bgPanel = UITheme.createGradientPanel();
+        bgPanel.setLayout(new BorderLayout());
+
+        // Header Panel
+        JPanel headerPanel = new JPanel();
+        headerPanel.setOpaque(false);
+        headerPanel.setPreferredSize(new Dimension(800, 100));
+        headerPanel.setLayout(new GridBagLayout());
+        
+        JLabel welcomeLabel = new JLabel("WELCOME, PATIENT ID: " + patientId);
+        welcomeLabel.setFont(new Font("Segoe UI Semilight", Font.PLAIN, 28));
+        welcomeLabel.setForeground(UITheme.TEXT_LIGHT);
+        headerPanel.add(welcomeLabel);
+
+        bgPanel.add(headerPanel, BorderLayout.NORTH);
+
+        // Center Panel (Grid of buttons)
+        JPanel gridPanel = new JPanel(new GridLayout(3, 2, 20, 20));
+        gridPanel.setOpaque(false);
+        gridPanel.setBorder(BorderFactory.createEmptyBorder(20, 50, 40, 50));
+
+        String[] menuItems = {
+            "Profile", "Health Records", 
+            "Service Records", "Blood Group", 
+            "Reports & Documents", "Appointment History"
+        };
+
+        for (String item : menuItems) {
+            JButton btn = createDashboardButton(item);
+            btn.addActionListener(e -> handleMenuClick(item));
+            gridPanel.add(btn);
+        }
+
+        bgPanel.add(gridPanel, BorderLayout.CENTER);
+
+        // Footer Panel (Logout)
+        JPanel footerPanel = new JPanel();
+        footerPanel.setBackground(UITheme.DARK_PANEL);
+        footerPanel.setPreferredSize(new Dimension(800, 50));
+        footerPanel.setLayout(new GridBagLayout());
+
+        JLabel logoutLabel = new JLabel("LOGOUT");
+        logoutLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        logoutLabel.setForeground(UITheme.TEXT_LIGHT);
+        logoutLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
+        logoutLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                dispose();
+                System.out.println("Logging out patient...");
+            }
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                logoutLabel.setForeground(UITheme.PRIMARY_BTN);
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                logoutLabel.setForeground(UITheme.TEXT_LIGHT);
+            }
+        });
+        footerPanel.add(logoutLabel);
+
+        bgPanel.add(footerPanel, BorderLayout.SOUTH);
+        add(bgPanel);
+    }
+
+    private void handleMenuClick(String item) {
+        switch(item) {
+            case "Profile":
+                String[] profile = backend.dao.PatientDAO.getPatientProfile(patientId);
+                if (profile != null) {
+                    JOptionPane.showMessageDialog(this,
+                        "Name: " + profile[0] + "\n" +
+                        "Phone: " + profile[1] + "\n" +
+                        "Age: " + profile[2] + "\n" +
+                        "Blood Group: " + profile[3] + "\n" +
+                        "Gender: " + profile[4],
+                        "Patient Profile", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Profile not found.");
+                }
+                break;
+            case "Health Records":
+                String[] headersHR = {"Doctor ID", "Diagnosis", "Date Recorded"};
+                String[][] dataHR = backend.dao.PatientDAO.getHealthRecords(patientId);
+                new frontend.common.DataViewerUI(this, "Health Records", headersHR, dataHR).setVisible(true);
+                break;
+            case "Service Records":
+                String[] headersSR = {"Service", "Date", "Amount", "Status"};
+                String[][] dataSR = backend.dao.PatientDAO.getServiceRecords(patientId);
+                new frontend.common.DataViewerUI(this, "Service Records", headersSR, dataSR).setVisible(true);
+                break;
+            case "Blood Group":
+                String[] pBG = backend.dao.PatientDAO.getPatientProfile(patientId);
+                if (pBG != null) {
+                    JOptionPane.showMessageDialog(this, "Your Blood Group is: " + pBG[3], "Blood Group", JOptionPane.INFORMATION_MESSAGE);
+                } else {
+                    JOptionPane.showMessageDialog(this, "Blood group not found.");
+                }
+                break;
+            case "Reports & Documents":
+                String[] headersRep = {"File Name", "File Path"};
+                String[][] dataRep = backend.dao.PatientDAO.getReports(patientId);
+                new frontend.common.DataViewerUI(this, "Reports & Documents", headersRep, dataRep).setVisible(true);
+                break;
+            case "Appointment History":
+                String[] headersApp = {"Doctor ID", "Date", "Diagnosis", "Prescription", "Status"};
+                String[][] dataApp = backend.dao.PatientDAO.getAppointmentHistory(patientId);
+                new frontend.common.DataViewerUI(this, "Appointment History", headersApp, dataApp).setVisible(true);
+                break;
+        }
+    }
+
+    private JButton createDashboardButton(String text) {
+        JButton button = new JButton(text);
+        button.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        button.setForeground(UITheme.TEXT_LIGHT);
+        button.setBackground(UITheme.DARK_PANEL);
+        button.setFocusPainted(false);
+        button.setBorder(BorderFactory.createLineBorder(new Color(60, 80, 90), 1));
+        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        button.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                button.setBackground(UITheme.PRIMARY_BTN);
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                button.setBackground(UITheme.DARK_PANEL);
+            }
+        });
+
+        return button;
+    }
+
+    public void showDashboard() {
+        this.setVisible(true);
+    }
+}
